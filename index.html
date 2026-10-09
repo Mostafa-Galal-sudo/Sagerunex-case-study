@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="An interactive, evidence-bounded investigation of the Sagerunex Windows backdoor.">
+  <title>Sagerunex — The Long Way Out</title>
+  <link rel="stylesheet" href="styles.css?v=5">
+</head>
+<body class="prelude-active">
+  <a class="skip" href="#case">Skip the opening</a>
+
+  <section class="prelude" id="prelude" aria-labelledby="preludeTitle">
+    <div class="prelude-image" aria-hidden="true"></div>
+    <div class="prelude-shade" aria-hidden="true"></div>
+    <div class="prelude-content">
+      <p class="case-id">MALOPS / SGRX-026 / STATIC INVESTIGATION</p>
+      <h1 id="preludeTitle">Twenty-six leads.<br>One backdoor.</h1>
+      <p>A question-by-question static investigation of a Windows DLL that waits for the right hour, borrows a user token, learns the proxy, and begins to call home.</p>
+      <button id="enterCase" class="enter-button" type="button"><span>Enter the investigation</span><i aria-hidden="true"></i></button>
+      <small>No executable is present. Every interaction is an inert reconstruction.</small>
+    </div>
+    <div class="prelude-route" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  </section>
+
+  <header class="casebar">
+    <a class="brand" href="#case" aria-label="Sagerunex case start">SGRX<span>026</span></a>
+    <nav aria-label="Investigation sections">
+      <a href="#intake">Intake</a><a href="#findings">26 Leads</a><a href="#entry">Story</a><a href="#artifacts">Artifacts</a><a href="#atlas">Functions</a><a href="#ledger">Ledger</a>
+    </nav>
+    <div class="case-progress"><span id="caseProgress"></span></div>
+    <button id="indexToggle" class="index-toggle" type="button" aria-expanded="false" aria-controls="caseIndex">Case index</button>
+  </header>
+
+  <aside class="case-index" id="caseIndex" aria-label="Live case index">
+    <button class="index-close" type="button" aria-label="Close case index">×</button>
+    <p class="case-id">CASE INDEX</p>
+    <ol>
+      <li><a href="#intake"><span>00</span>Scope and boundary</a></li><li><a href="#findings"><span>01–26</span>Complete finding leads</a></li><li><a href="#entry"><span>A</span>Narrative reconstruction</a></li><li><a href="#artifacts"><span>B</span>Artifacts and ATT&amp;CK</a></li><li><a href="#atlas"><span>C</span>Function atlas</a></li><li><a href="#evidence"><span>D</span>Evidence queue</a></li><li><a href="#ledger"><span>E</span>Answer ledger</a></li>
+    </ol>
+    <div class="index-status"><span>26 / 26</span><small>challenge answers mapped</small></div>
+  </aside>
+
+  <main id="case">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-visual" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="case-id">THE LONG WAY OUT</p>
+        <h2 id="heroTitle">Sagerunex</h2>
+        <p class="hero-lead">Inside a proxy-aware Windows backdoor.</p>
+        <p class="hero-summary">A complete static reconstruction of initialization, token manipulation, configuration recovery, command-and-control routing, remote execution, and chunk-based file movement.</p>
+      </div>
+      <dl class="hero-facts">
+        <div><dt>FORMAT</dt><dd>PE32+ / AMD64 DLL</dd></div><div><dt>EXPORT</dt><dd><button data-function="MainEntry">MainEntry</button></dd></div><div><dt>CONFIG</dt><dd>1,600 bytes</dd></div><div><dt>ENDPOINTS</dt><dd>5 slots</dd></div><div><dt>CHALLENGE RESULT</dt><dd>260 / 260</dd></div>
+      </dl>
+      <div class="scroll-cue">Follow the beacon <span></span></div>
+    </section>
+
+    <section class="chapter intake" id="intake" data-chapter>
+      <header class="chapter-head">
+        <span class="chapter-number">00</span>
+        <div><p>Incident intake</p><h3>What is established—and what is only the story around it?</h3></div>
+      </header>
+      <div class="answer"><b>Answer</b><p>A 64-bit Windows DLL with backdoor capabilities is code-backed. The invoice lure and employee HTTPS traffic are scenario facts. Successful compromise, live C2, and attribution are not established.</p></div>
+      <div class="editorial-grid">
+        <div class="statement"><h4>The code is evidence.<br>The scenario is context.</h4><p>A strong case study keeps those categories separate. Sagerunex exposes real control paths for impersonation, encrypted configuration, network discovery, proxy fallback, command execution, and file transfer. It does not expose the actual infrastructure or prove any action succeeded.</p></div>
+        <div class="provenance-instrument" aria-label="Evidence provenance categories">
+          <button class="active" data-provenance="observed"><span>01</span><b>Observed</b><small>Literal strings, APIs, constants, and branches</small></button>
+          <button data-provenance="establishes"><span>02</span><b>Establishes</b><small>Capabilities directly recoverable from code</small></button>
+          <button data-provenance="scenario"><span>03</span><b>Scenario</b><small>Delivery and host activity supplied by the challenge</small></button>
+          <button data-provenance="unknown"><span>04</span><b>Not established</b><small>Runtime success, attribution, endpoints, propagation</small></button>
+          <p id="provenanceReadout">Observed evidence includes the PE machine value, export, API calls, exact strings, offsets, and branch constants reported in the supplied analysis.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="findings" id="findings" data-chapter aria-labelledby="findingsTitle">
+      <header class="findings-head">
+        <div><p class="case-id">PRIMARY INVESTIGATION / 26 CHALLENGE LEADS</p><h3 id="findingsTitle">Every question.<br>Fully worked.</h3></div>
+        <p>The five cinematic chapters below explain the larger execution story. This dossier is the complete question-level analysis: one lead per challenge prompt, with the answer first, the supporting logic, the security meaning, and the exact evidence still needed.</p>
+      </header>
+      <div class="findings-jump" id="findingsJump" aria-label="Jump to a finding"></div>
+      <div class="findings-list" id="findingsList"></div>
+    </section>
+
+    <section class="chapter entry" id="entry" data-chapter>
+      <header class="chapter-head"><span class="chapter-number">01</span><div><p>Entry and identity</p><h3>What happens before the first beacon attempt?</h3></div></header>
+      <div class="answer"><b>Answer</b><p><code>MainEntry</code> prepares <code>TS_FB56.tmp</code>, checks <code>0xC91F3B</code>, may borrow the <code>explorer.exe</code> token, decodes 1,888 bytes, and enters the beacon loop.</p></div>
+      <div class="entry-stage">
+        <div class="entry-spine" id="entrySpine">
+          <button class="active" data-step="0"><i>01</i><span><b>MainEntry</b><small>0x1800064C8</small></span></button>
+          <button data-step="1"><i>02</i><span><b>Prepare log</b><small>TS_FB56.tmp</small></span></button>
+          <button data-step="2"><i>03</i><span><b>Magic gate</b><small>0xC91F3B</small></span></button>
+          <button data-step="3"><i>04</i><span><b>Borrow identity</b><small>explorer.exe</small></span></button>
+          <button data-step="4"><i>05</i><span><b>Decode region</b><small>0x760 / 1,888 bytes</small></span></button>
+          <button data-step="5"><i>06</i><span><b>Enter loop</b><small>FUN_180002884</small></span></button>
+        </div>
+        <article class="step-readout" id="entryReadout">
+          <p>STEP 01 / EXPORTED ENTRY</p><h4>MainEntry establishes the case’s execution spine.</h4><p>The export belongs to <code>MainDLL.dll</code>. An export-directory reference is not itself a direct internal call.</p><button data-function="MainEntry">Inspect function record</button>
+        </article>
+      </div>
+      <div class="identity-panel">
+        <div class="identity-target"><span>target process</span><strong>explorer.exe</strong><small>CreateToolhelp32Snapshot → Process32FirstW / Process32NextW</small></div>
+        <div class="identity-arrow" aria-hidden="true"></div>
+        <div class="identity-api"><button data-function="FUN_1800031a0">OpenProcess</button><button data-function="FUN_180003294">DuplicateToken</button><button data-function="FUN_180003294">SetThreadToken</button></div>
+        <p><b>Evidence boundary:</b> the sequence establishes an impersonation attempt. Static code does not prove a suitable process was found or that the token was successfully applied.</p>
+      </div>
+      <div class="diagnostic-strip"><span>RECOVERED INTERNAL LOG STRINGS</span><code>0x00, ST.</code><code>0x00, SM.</code><code>0x01, RC success.</code><code>0x01, RC failed.</code><code>0x01, CN failed.</code><p>The supplied ANSI and wide logging bodies timestamp, transform, and append these messages to the configured log path when logging is enabled.</p></div>
+    </section>
+
+    <section class="chapter crypto" id="config" data-chapter>
+      <header class="chapter-head"><span class="chapter-number">02</span><div><p>Configuration and storage</p><h3>Why do two different transforms appear in the same sample?</h3></div></header>
+      <div class="answer"><b>Answer</b><p>A chained XOR transform handles a 1,888-byte in-memory region. Separate RC4-like logic protects a 1,600-byte configuration stored beneath AppData.</p></div>
+      <div class="dual-transform">
+        <article class="transform xor-transform">
+          <header><span>TRANSFORM A</span><b>Memory region</b></header>
+          <strong>0x760</strong><small>1,888 bytes</small>
+          <div class="byte-ribbon" id="xorRibbon" aria-label="Illustrative chained XOR byte ribbon"></div>
+          <p>Bytes are processed from end to beginning using the preceding stored byte. The first byte is XORed with <code>0xAD</code>.</p>
+          <button id="runXor" type="button">Visualize the chain</button>
+          <button data-function="FUN_1800061bc">Open function</button>
+        </article>
+        <article class="transform rc4-transform">
+          <header><span>TRANSFORM B</span><b>Persisted config</b></header>
+          <strong>0x640</strong><small>1,600 bytes</small>
+          <div class="state-wheel" id="stateWheel" aria-label="Illustrative RC4-like state wheel"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><span>PRGA</span></div>
+          <p>A wrapper prepares state, then a swap/XOR keystream operation transforms the configuration in place.</p>
+          <button id="runRc4" type="button">Rotate state</button>
+          <button data-function="FUN_1800090a4">Open function</button>
+        </article>
+      </div>
+      <div class="storage-route">
+        <p class="path-label">%APPDATA%\Microsoft\Protect\Windows\DMI%X.DAT</p>
+        <div class="route-steps"><button data-function="FUN_1800040cc"><span>01</span>Resolve AppData</button><button data-function="FUN_180004194"><span>02</span>Read 0x640</button><button data-function="FUN_1800090a4"><span>03</span>Transform</button><button data-function="FUN_180004288"><span>04</span>Write copy</button><button data-function="FUN_18000208c"><span>05</span>Backdate to 2011</button></div>
+        <p class="qualification">This proves disk-backed configuration handling and timestomping. It does <em>not</em> prove boot or logon autostart persistence.</p>
+      </div>
+      <div class="config-lifecycle"><span>CONFIGURATION LIFECYCLE</span><p><b>Initialize session</b> → construct AppData path → load existing 0x640-byte file or use supplied/default configuration → apply RC4-like transform → validate timing fields → save and timestomp when required → use for C2 activity.</p></div>
+    </section>
+
+    <section class="chapter beacon" id="beacon" data-chapter>
+      <header class="chapter-head"><span class="chapter-number">03</span><div><p>Beacon orchestration</p><h3>How does Sagerunex decide when and where to call?</h3></div></header>
+      <div class="answer"><b>Answer</b><p>It rotates through five 50-byte endpoint slots, obeys local work-hour bounds, retries at five or thirty minutes, and stops after 720 minutes of accounted loop time.</p></div>
+      <div class="beacon-console">
+        <div class="orbital" id="orbital" aria-label="Illustrative five-slot beacon selector">
+          <div class="orbit-ring"></div><button data-server="1" class="active">01</button><button data-server="2">02</button><button data-server="3">03</button><button data-server="4">04</button><button data-server="5">05</button><div class="beacon-core"><small>selected slot</small><strong id="serverReadout">01</strong></div>
+        </div>
+        <div class="cycle-panel">
+          <div class="cycle-head"><span>ILLUSTRATIVE LOOP TRACE</span><button id="runCycle" type="button">Run one cycle</button></div>
+          <ol id="cycleTrace"><li class="active"><b>01</b>Read local hour</li><li><b>02</b>Check configured interval</li><li><b>03</b>Select endpoint modulo 5</li><li><b>04</b>Resolve route and attempt session</li><li><b>05</b>Account delay / retry</li></ol>
+          <div class="cycle-status" id="cycleStatus">READY / NO NETWORK ACTION</div>
+        </div>
+      </div>
+      <div class="time-scale">
+        <div><strong>300,000 ms</strong><span>outside-hours wait</span></div><div><strong>5 min</strong><span>initial retry</span></div><div><strong>10</strong><span>failed short-delay rounds</span></div><div><strong>30 min</strong><span>later fallback</span></div><div><strong>720 min</strong><span>accounted limit</span></div>
+      </div>
+      <div class="server-layout"><span>FIVE 50-BYTE SERVER SLOTS / TOTAL CAPACITY 0xFA</span><div><b>01</b><code>+0xC858</code></div><div><b>02</b><code>+0xC88A</code></div><div><b>03</b><code>+0xC8BC</code></div><div><b>04</b><code>+0xC8EE</code></div><div><b>05</b><code>+0xC920</code></div><p>These are session-structure storage locations—not recovered network addresses.</p></div>
+      <div class="offset-rail">
+        <span style="--p:0"><b>+0xC848</b><small>config base / accepted Q21</small></span><span style="--p:18"><b>+0xC858</b><small>first server string</small></span><span style="--p:68"><b>+0xCC4C</b><small>appears to be start</small></span><span class="ambiguous" style="--p:88"><b>+0xCC50</b><small>appears end / accepted Q22</small></span>
+      </div>
+      <div class="coordinate-table"><div><span>REPRESENTATION</span><b>FIRST FIELD</b><b>SECOND FIELD</b></div><div><span>Runtime session offset</span><code>0xCC4C</code><code>0xCC50</code></div><div><span>Saved-config relative</span><code>0x404</code><code>0x408</code></div><div><span><code>undefined4 *</code> index</span><code>0x3313</code><code>0x3314</code></div><p>These coordinate systems are not interchangeable. The challenge accepts <code>0xCC50</code>; branch semantics still suggest the second field is the upper bound.</p></div>
+    </section>
+
+    <section class="chapter network" id="network" data-chapter>
+      <header class="chapter-head"><span class="chapter-number">04</span><div><p>Proxy-aware route</p><h3>What happens when the direct path is not enough?</h3></div></header>
+      <div class="answer"><b>Answer</b><p>The sample discovers DNS, falls back to <code>8.8.8.8</code>, probes an ICMP route, and attempts multiple HTTP/HTTPS proxy strategies.</p></div>
+      <div class="route-lab">
+        <div class="route-origin"><i></i><strong>Windows host</strong><small>local network context</small></div>
+        <div class="route-wire"><span id="routePulse"></span></div>
+        <div class="gateway-stack" id="gatewayStack">
+          <button class="active" data-route="config"><b>CONFIG</b><small>supplied proxy data</small></button><button data-route="wpad"><b>WPAD</b><small>automatic discovery</small></button><button data-route="ie"><b>IE</b><small>per-user registry</small></button><button data-route="firefox"><b>FIREFOX</b><small>profiles.ini → prefs.js</small></button><button data-route="auto"><b>AUTO</b><small>automatic proxy</small></button><button data-route="preconfig"><b>PRECONFIG</b><small>system defaults</small></button>
+        </div>
+        <div class="route-wire"><span></span></div>
+        <div class="route-unknown"><strong>?</strong><span>Configured endpoint</span><small>not supplied</small></div>
+      </div>
+      <div class="route-readout" id="routeReadout"><span>ROUTE / CONFIG</span><p>The function first considers proxy information carried by configuration. Concrete proxy values were not supplied.</p><button id="traceRoute" type="button">Trace selected route</button></div>
+      <div class="network-facts">
+        <article><span>DNS FALLBACK</span><strong>8.8.8.8</strong><p>Hardcoded public resolver. It is benign infrastructure, not a malicious C2 indicator.</p></article>
+        <article><span>ICMP PROBE</span><strong>3,000 ms</strong><p>Timeout passed to <code>IcmpSendEcho</code>, not WinHTTP. TTL begins at one, with at most ten iterations.</p></article>
+        <article><span>USER-AGENT FALLBACK</span><strong>MSIE 7.0</strong><p><code>Mozilla/5.0 (compatible; MSIE 7.0; Win32)</code> is supplied when another string is unavailable.</p></article>
+      </div>
+      <div class="connection-internals"><div><span>MODE STATE</span><strong>param_1[0x3211]</strong><p>Records values corresponding to the selected connection mode.</p></div><div><span>UNRESOLVED CONNECTION HELPERS</span><p><code>FUN_1800038fc</code> · <code>FUN_1800076ec</code> · <code>FUN_18000761c</code> · <code>FUN_180007680</code> · <code>FUN_18000786c</code> · <code>FUN_1800075d0</code></p><p>Their placement matches the fallback branches; protocol-level names remain unverified.</p></div></div>
+    </section>
+
+    <section class="chapter capability" id="capability" data-chapter>
+      <header class="chapter-head"><span class="chapter-number">05</span><div><p>Operator capability</p><h3>What can the remote side ask the host to do?</h3></div></header>
+      <div class="answer"><b>Answer</b><p>The handler supports executable launch, DLL export invocation, a Windows command-shell fallback, and chunked file transfer.</p></div>
+      <div class="dispatch-lab">
+        <div class="dispatch-selector" role="tablist" aria-label="Inert command dispatch model">
+          <button role="tab" aria-selected="true" data-command="runexe">runexe</button><button role="tab" aria-selected="false" data-command="rundll">rundll</button><button role="tab" aria-selected="false" data-command="other">other input</button>
+        </div>
+        <div class="dispatch-flow" id="dispatchFlow"><div><span>PARSE</span><b>copy remainder to command line</b></div><i></i><div><span>ATTEMPT</span><b>CreateProcessA</b></div><i></i><div><span>OUTPUT</span><b>collect through pipes</b></div></div>
+        <p>This interface accepts no input and executes nothing. It only reconstructs the supplied control flow.</p>
+      </div>
+      <div class="transfer-lab">
+        <div class="chunk"><span>READ SIZE</span><strong>0xC000</strong><small>49,152 bytes / 48 KiB</small></div>
+        <div class="packet-strip" id="packetStrip" aria-label="Illustrative file chunk"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="attempts"><span>SEND ATTEMPTS</span><strong id="attemptReadout">0 / 3</strong><button id="sendChunk" type="button">Visualize attempts</button></div>
+        <p><b>Capability, not outcome:</b> the destination, packet layout, and successful exfiltration are not demonstrated.</p>
+      </div>
+    </section>
+
+    <section class="artifacts" id="artifacts" data-chapter>
+      <header class="artifacts-head"><div><p class="case-id">FORENSIC ARTIFACTS / DEFENSIVE MAPPING</p><h3>Useful only with their limits attached.</h3></div><p>The new technical report separates high-value sample artifacts from legitimate infrastructure and unresolved indicators.</p></header>
+      <div class="artifact-columns">
+        <div><h4>Recovered artifacts</h4><dl class="ioc-list"><div><dt>Log path</dt><dd><code>%TEMP%\TS_FB56.tmp</code></dd></div><div><dt>Config path</dt><dd><code>%APPDATA%\Microsoft\Protect\Windows\DMI%X.DAT</code></dd></div><div><dt>Target process</dt><dd><code>explorer.exe</code></dd></div><div><dt>Firefox metadata</dt><dd><code>profiles.ini</code> → <code>prefs.js</code></dd></div><div><dt>Firefox proxy</dt><dd><code>network.proxy.ssl</code> / <code>network.proxy.ssl_port</code></dd></div><div><dt>Windows proxy</dt><dd><code>HKEY_USERS\&lt;SID&gt;\…\Internet Settings</code></dd></div><div><dt>User-agent fallback</dt><dd><code>Mozilla/5.0 (compatible; MSIE 7.0; Win32)</code></dd></div><div class="caution"><dt>DNS fallback</dt><dd><code>8.8.8.8</code> — legitimate public infrastructure, not C2</dd></div></dl></div>
+        <div><h4>ATT&amp;CK-aligned behaviors</h4><dl class="attack-list"><div><dt>T1566.001</dt><dd>Spearphishing Attachment <small>scenario</small></dd></div><div><dt>T1134</dt><dd>Access Token Manipulation</dd></div><div><dt>T1070.006</dt><dd>Timestomp</dd></div><div><dt>T1059.003</dt><dd>Windows Command Shell</dd></div><div><dt>T1090</dt><dd>Proxy</dd></div><div><dt>T1071.001</dt><dd>Web Protocols</dd></div><div><dt>T1041</dt><dd>Exfiltration Over C2 Channel <small>capability</small></dd></div></dl><div class="unresolved-box"><span>UNRESOLVED INDICATORS</span><p>Sample hash, real C2 hosts, ports and URIs, plaintext configuration, transferred filenames, and a confirmed autostart artifact were not recovered.</p></div></div>
+      </div>
+    </section>
+
+    <section class="atlas" id="atlas" data-chapter>
+      <header class="atlas-head"><div><p class="case-id">FUNCTION ATLAS / 31 OF 31 INGESTED</p><h3>Thirty-one symbols.<br>One execution story.</h3></div><p>The complete supplied decompile set is preserved as inert text under <code>assets/decompiled/</code>. Function records separate code-backed behavior from analyst-assigned names, and the original Ghidra warnings remain intact.</p></header>
+      <div class="atlas-toolbar"><div class="atlas-filters" role="group" aria-label="Filter function groups"><button class="active" data-function-filter="all">All</button><button data-function-filter="entry">Entry</button><button data-function-filter="config">Config</button><button data-function-filter="network">Network</button><button data-function-filter="control">Control</button><button data-function-filter="support">Support</button></div><label>Find symbol<input id="functionSearch" type="search" placeholder="FUN_1800…"></label><button class="trace-button" id="runFunctionTrace" type="button"><span>Run execution trace</span><i aria-hidden="true"></i></button></div>
+      <div class="graph-key" aria-label="Function graph legend"><span><i class="grounded"></i>Code-backed role</span><span><i class="moderate"></i>Moderate interpretation</span><span><i class="edge"></i>Observed or structural flow</span><b id="graphStatus">31 nodes / ready</b></div>
+      <div class="function-graph" id="functionAtlas" aria-label="Interactive Sagerunex function flow graph"></div>
+    </section>
+
+    <section class="evidence-queue" id="evidence" data-chapter>
+      <header class="evidence-head"><div><p class="case-id">EVIDENCE CAPTURE QUEUE</p><h3>The site is ready for every screenshot.</h3></div><div><strong id="evidenceCount">0 / 26</strong><span>supplied</span></div></header>
+      <p class="evidence-intro">These are not fake screenshots. Each frame names the exact Ghidra view and highlight still needed. When the captures arrive, the same frames become lightboxes without restructuring the case.</p>
+      <div class="evidence-grid" id="evidenceGrid"></div>
+    </section>
+
+    <section class="ledger" id="ledger" data-chapter>
+      <header class="ledger-head"><div><p class="case-id">COMPLETE CHALLENGE LEDGER</p><h3>Twenty-six answers.<br>No detached caveats.</h3></div><div class="ledger-filters" role="group" aria-label="Filter answer ledger"><button class="active" data-ledger="all">All</button><button data-ledger="direct">Direct</button><button data-ledger="caveat">Caveat</button></div></header>
+      <div class="ledger-wrap"><table><thead><tr><th>Q</th><th>Accepted answer</th><th>Evidence note</th><th>State</th></tr></thead><tbody id="ledgerBody"></tbody></table></div>
+    </section>
+
+    <section class="verdict" id="verdict" data-chapter>
+      <div class="verdict-copy"><p class="case-id">VERDICT / EVIDENCE-BOUNDED</p><h3>A patient backdoor built for constrained networks.</h3><p>Sagerunex combines conditional token impersonation, reverse chained XOR decoding, RC4-like protected local configuration, deliberate timestomping, five-slot endpoint rotation, local-hour scheduling, layered proxy discovery, remote execution, and chunk-based file movement.</p><p>The strongest architectural finding is its communication subsystem: it extracts host networking settings and attempts several routes rather than assuming direct Internet access.</p><p>That architecture is strongly supported. The real endpoints, successful runtime effects, autostart mechanism, propagation, and attribution are not.</p><a class="report-link" href="assets/research/Sagerunex_Technical_Writeup.md">Read the complete technical report</a></div>
+      <div class="missing-evidence"><span>STILL REQUIRED</span><ol><li>Binary hashes and signature assessment</li><li>Decrypted embedded and saved configuration</li><li>Verified startup trigger or explicit absence</li><li>The separately referenced 0xC000 transfer-controller body</li><li>Numbered Ghidra evidence captures</li><li>Optional isolated dynamic observations</li></ol></div>
+      <div class="case-closed"><span>CASE STATUS</span><strong>CAPABILITY MAPPED</strong><small>Operational outcome unresolved</small></div>
+    </section>
+  </main>
+
+  <footer><span>SAGERUNEX / MALOPS STATIC CASE STUDY</span><span>ANALYSIS: MOSTAFA GALAL</span><span>NO MALWARE INCLUDED</span></footer>
+
+  <dialog class="function-dialog" id="functionDialog"><div class="dialog-top"><div><p id="functionGroup">FUNCTION RECORD</p><h3 id="functionTitle"></h3><span id="functionName"></span></div><button id="closeFunction" type="button" aria-label="Close function record">×</button></div><div class="function-summary" id="functionSummary"></div><div class="code-frame"><div><span>DECOMPILER TEXT</span><span id="codeState">STAGED / AWAITING EXPORT</span></div><pre><code id="functionCode"></code></pre></div></dialog>
+  <script src="app.js?v=5"></script>
+</body>
+</html>
